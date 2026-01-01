@@ -1,7 +1,5 @@
 # ✨ Full Stack Realtime Chat App ✨
 
-//add more functionality later like  timer mssage ,study pdf rt,
-//app.eraser.io/workspace/Y1v9aiudDQ2mJPweY3th
 
 ![Demo App](/frontend/public/screenshot-for-readme.png)
 
