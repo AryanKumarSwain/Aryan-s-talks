@@ -1,10 +1,13 @@
 import { useRef, useState } from "react";
+import EmojiPicker from "emoji-picker-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useChatStore } from "../store/useChatStore";
-import { Image, Send, X } from "lucide-react";
+import { Image, Send, X, Smile } from "lucide-react";
 import toast from "react-hot-toast";
 
 const MessageInput = () => {
   const [text, setText] = useState("");
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
   const { sendMessage } = useChatStore();
@@ -47,8 +50,10 @@ const MessageInput = () => {
     }
   };
 
+
+
   return (
-    <div className="p-4 w-full">
+    <div className="p-4 w-full relative">
       {imagePreview && (
         <div className="mb-3 flex items-center gap-2">
           <div className="relative">
@@ -88,6 +93,17 @@ const MessageInput = () => {
 
           <button
             type="button"
+           className={`hidden sm:flex btn btn-circle
+                     ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`} 
+            onClick={() => setShowEmojiPicker((v) => !v)}
+            style={{ minWidth: 40 }}
+          >
+            <Smile size={20} />
+          </button>
+
+
+          <button
+            type="button"
             className={`hidden sm:flex btn btn-circle
                      ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
             onClick={() => fileInputRef.current?.click()}
@@ -103,6 +119,23 @@ const MessageInput = () => {
           <Send size={22} />
         </button>
       </form>
+
+      <AnimatePresence>
+        {showEmojiPicker && (
+          <motion.div
+            style={{ position: "absolute", bottom: 60, left: 10, zIndex: 100 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.25 }}
+          >
+            <EmojiPicker
+              onEmojiClick={(emojiObject) => setText((prev) => prev + emojiObject.emoji)}
+              width={350}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
