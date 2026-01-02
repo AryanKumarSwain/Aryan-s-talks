@@ -19,7 +19,7 @@ const NoChatSelected = () => {
           <img
             src={swainT}
             alt="Talks Logo Full"
-            className="hidden sm:block max-w-none w-43 h-42 object-contain"
+            className="hidden sm:block max-w-none w-42 h-42 object-contain"
           />
         </div>
         {/* Welcome Text */}
