@@ -2,6 +2,7 @@ import { useState } from "react";
 import { axiosInstance } from "../lib/axios";
 import { Link } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 import AuthImagePattern from "../components/AuthImagePattern";
 import TalksLogo from "/Talks_logo.png";
@@ -13,6 +14,7 @@ const ForgotPasswordPage = () => {
   const [newPassword, setNewPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const requestReset = async (e) => {
     e.preventDefault();
@@ -93,14 +95,28 @@ const ForgotPasswordPage = () => {
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
               />
-              <input
-                type="password"
-                required
-                placeholder="New password"
-                className="input input-bordered w-full"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="New password"
+                  className="input input-bordered w-full pr-10"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="absolute right-3 top-1/2 -translate-y-1/2"
+                  onClick={() => setShowPassword((v) => !v)}
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-5 text-base-content/40" />
+                  ) : (
+                    <Eye className="size-5 text-base-content/40" />
+                  )}
+                </button>
+              </div>
               <button
                 type="submit"
                 className="btn btn-primary w-full"
