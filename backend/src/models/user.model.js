@@ -7,6 +7,14 @@ const userSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    resetCode: {
+      type: String,
+      default: null,
+    },
+    resetCodeExpires: {
+      type: Date,
+      default: null,
+    },
     fullName: {
       type: String,
       required: true,
@@ -19,6 +27,18 @@ const userSchema = new mongoose.Schema(
     profilePic: {
       type: String,
       default: "",
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    verificationCode: {
+      type: String,
+      default: null,
+    },
+    verificationCodeExpires: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true }

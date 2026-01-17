@@ -1,13 +1,16 @@
 import { useState } from "react";
-import { useAuthStore } from "../store/useAuthStore";
+import { useNavigate, Link } from "react-router-dom";
 import { Eye, EyeOff, Loader2, Lock, Mail, User } from "lucide-react";
-import { Link } from "react-router-dom";
-import TalksLogo from "/Talks_logo.png";
-
-import AuthImagePattern from "../components/AuthImagePattern";
 import toast from "react-hot-toast";
 
+import { useAuthStore } from "../store/useAuthStore";
+import AuthImagePattern from "../components/AuthImagePattern";
+import TalksLogo from "/Talks_logo.png";
+
 const SignUpPage = () => {
+  const navigate = useNavigate();
+  const { signup, isSigningUp } = useAuthStore();
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
@@ -15,50 +18,64 @@ const SignUpPage = () => {
     password: "",
   });
 
-  const { signup, isSigningUp } = useAuthStore();
-
   const validateForm = () => {
-    if (!formData.fullName.trim()) return toast.error("Full name is required");
-    if (!formData.email.trim()) return toast.error("Email is required");
-    if (!/\S+@\S+\.\S+/.test(formData.email)) return toast.error("Invalid email format");
-    if (!formData.password) return toast.error("Password is required");
-    if (formData.password.length < 6)
-      return toast.error("Password must be at least 6 characters");
+    if (!formData.fullName.trim()) {
+      toast.error("Full name is required");
+      return false;
+    }
+
+    if (!formData.email.trim()) {
+      toast.error("Email is required");
+      return false;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error("Invalid email format");
+      return false;
+    }
+
+    if (!formData.password) {
+      toast.error("Password is required");
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return false;
+    }
 
     return true;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = validateForm();
-    if (success === true) signup(formData);
+
+    if (!validateForm()) return;
+
+    const result = await signup(formData);
+    // If signup is successful, redirect to verify-email page
+    if (result && result.success !== false) {
+      navigate("/verify-email", { state: { email: formData.email } });
+    }
   };
 
   return (
-    <div className="min-h-screen grid lg:grid-cols-2">
-      {/* Left side */}
+    <div className="h-screen grid lg:grid-cols-2">
+      {/* LEFT */}
       <div className="flex flex-col justify-center items-center p-6 sm:p-12">
         <div className="w-full max-w-md space-y-8">
-
           {/* Logo */}
-          <div className="text-center mb-8">
+          <div className="text-center">
             <div className="flex flex-col items-center gap-2">
-              <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden">
-                <img
-                  src={TalksLogo}
-                  alt="Talks Logo"
-                  className="w-8 h-8 object-contain"
-                />
+              <div className="size-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                <img src={TalksLogo} alt="Talks Logo" className="w-8 h-8" />
               </div>
-
-              <h1 className="text-2xl font-bold mt-2">Create Account</h1>
-              <p className="text-base-content/60">
-                Get started with your free account
-              </p>
+              <h1 className="text-2xl font-bold">Create Account</h1>
+              <p className="text-base-content/60">Sign up to start chatting</p>
             </div>
           </div>
 
-          {/* Form */}
+          {/* SIGNUP FORM */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Full Name */}
             <div className="form-control">
@@ -117,7 +134,7 @@ const SignUpPage = () => {
                 <button
                   type="button"
                   className="absolute right-3 top-1/2 -translate-y-1/2"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={() => setShowPassword((v) => !v)}
                 >
                   {showPassword ? (
                     <EyeOff className="size-5 text-base-content/40" />
@@ -136,31 +153,35 @@ const SignUpPage = () => {
             >
               {isSigningUp ? (
                 <>
-                  <Loader2 className="size-5 animate-spin" />
-                  Loading...
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Creating account...
                 </>
               ) : (
-                "Create Account"
+                "Sign up"
               )}
             </button>
           </form>
 
-          {/* Footer */}
-          <div className="text-center">
-            <p className="text-base-content/60">
-              Already have an account?{" "}
-              <Link to="/login" className="link link-primary">
-                Sign in
-              </Link>
-            </p>
+          <div className="flex justify-between text-sm mt-2">
+            <button
+              type="button"
+              className="link link-error"
+              onClick={() => {
+                navigate("/verify-email", { state: { email: formData.email } });
+              }}
+            >
+              Verify email
+            </button>
+            <Link to="/login" className="link link-primary">
+              Already have an account?
+            </Link>
           </div>
         </div>
       </div>
-
-      {/* Right side */}
+      {/* RIGHT */}
       <AuthImagePattern
-        title="Join our community"
-        subtitle="Connect with friends, share moments, and stay in touch with your loved ones."
+        title="Create your account"
+        subtitle="Sign up to start chatting."
       />
     </div>
   );
