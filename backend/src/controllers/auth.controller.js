@@ -85,7 +85,7 @@ export const completeSignup = async (req, res) => {
     console.error("Error in completeSignup controller:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
-}
+};
 
 /**
  * =========================

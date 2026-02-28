@@ -3,7 +3,10 @@ import { axiosInstance } from "../lib/axios.js";
 import toast from "react-hot-toast";
 import { io } from "socket.io-client";
 
-const BASE_URL = import.meta.env.MODE === "development" ? "http://localhost:5001" : "/";
+const BASE_URL =
+  import.meta.env.MODE === "development"
+    ? "http://localhost:5001"
+    : "/";
 
 export const useAuthStore = create((set, get) => ({
   authUser: null,
@@ -14,10 +17,10 @@ export const useAuthStore = create((set, get) => ({
   onlineUsers: [],
   socket: null,
 
+  // ✅ CHECK AUTH
   checkAuth: async () => {
     try {
       const res = await axiosInstance.get("/auth/check");
-
       set({ authUser: res.data });
       get().connectSocket();
     } catch (error) {
@@ -28,36 +31,42 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
+  // ✅ SIGNUP
   signup: async (data) => {
     set({ isSigningUp: true });
     try {
       const res = await axiosInstance.post("/auth/signup", data);
-      // Do not set authUser yet, wait for verification
-      toast.success(res.data.message || "Verification code sent to email");
+      toast.success(res.data?.message || "Verification code sent");
       return { email: data.email };
     } catch (error) {
-      toast.error(error.response?.data?.message || "Signup failed");
+      toast.error(
+        error.response?.data?.message || "Server not reachable"
+      );
       return null;
     } finally {
       set({ isSigningUp: false });
     }
   },
 
+  // ✅ LOGIN
   login: async (data) => {
     set({ isLoggingIn: true });
     try {
       const res = await axiosInstance.post("/auth/login", data);
       set({ authUser: res.data });
       toast.success("Logged in successfully");
-
       get().connectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      console.log("Login error:", error);
+      toast.error(
+        error.response?.data?.message || "Server not reachable"
+      );
     } finally {
       set({ isLoggingIn: false });
     }
   },
 
+  // ✅ LOGOUT
   logout: async () => {
     try {
       await axiosInstance.post("/auth/logout");
@@ -65,10 +74,13 @@ export const useAuthStore = create((set, get) => ({
       toast.success("Logged out successfully");
       get().disconnectSocket();
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(
+        error.response?.data?.message || "Server not reachable"
+      );
     }
   },
 
+  // ✅ UPDATE PROFILE
   updateProfile: async (data) => {
     set({ isUpdatingProfile: true });
     try {
@@ -76,31 +88,43 @@ export const useAuthStore = create((set, get) => ({
       set({ authUser: res.data });
       toast.success("Profile updated successfully");
     } catch (error) {
-      console.log("error in update profile:", error);
-      toast.error(error.response.data.message);
+      console.log("Update profile error:", error);
+      toast.error(
+        error.response?.data?.message || "Server not reachable"
+      );
     } finally {
       set({ isUpdatingProfile: false });
     }
   },
 
+  // ✅ SOCKET CONNECT
   connectSocket: () => {
-    const { authUser } = get();
-    if (!authUser || get().socket?.connected) return;
+    const { authUser, socket } = get();
 
-    const socket = io(BASE_URL, {
-      query: {
-        userId: authUser._id,
-      },
+    if (!authUser || socket?.connected) return;
+
+    const newSocket = io(BASE_URL, {
+      query: { userId: authUser._id },
+      withCredentials: true,
     });
-    socket.connect();
 
-    set({ socket: socket });
+    newSocket.on("connect", () => {
+      console.log("Socket connected");
+    });
 
-    socket.on("getOnlineUsers", (userIds) => {
+    newSocket.on("getOnlineUsers", (userIds) => {
       set({ onlineUsers: userIds });
     });
+
+    set({ socket: newSocket });
   },
+
+  // ✅ SOCKET DISCONNECT
   disconnectSocket: () => {
-    if (get().socket?.connected) get().socket.disconnect();
+    const { socket } = get();
+    if (socket?.connected) {
+      socket.disconnect();
+      set({ socket: null });
+    }
   },
 }));
