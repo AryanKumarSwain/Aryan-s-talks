@@ -33,15 +33,26 @@ export const requestPasswordReset = async (req, res) => {
     user.resetCodeExpires = resetCodeExpires;
     await user.save();
 
-    // ✅ SEND RESET EMAIL
-    await sendVerificationEmail(email, resetCode, "reset");
+    try {
+      await sendVerificationEmail(email, resetCode, "reset");
+    } catch (emailError) {
+      console.error("Request reset: email failed", emailError.message);
+      user.resetCode = null;
+      user.resetCodeExpires = null;
+      await user.save();
+      return res.status(503).json({
+        message: "Could not send verification email. Please try again later.",
+      });
+    }
 
     res.status(200).json({
       message: "Password reset code sent to email.",
     });
   } catch (error) {
     console.error("Error in requestPasswordReset:", error);
-    res.status(500).json({ message: "Internal Server Error" });
+    res.status(500).json({
+      message: error.message || "Internal Server Error",
+    });
   }
 };
 

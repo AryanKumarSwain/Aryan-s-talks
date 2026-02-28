@@ -1,15 +1,26 @@
 import nodemailer from "nodemailer";
+import dns from "dns";
+
+// Prefer IPv4 so SMTP doesn't time out on networks that block IPv6 (ETIMEDOUT on port 465)
+dns.setDefaultResultOrder("ipv4first");
 
 /**
  * Create transporter once (better performance)
  */
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+function getTransporter() {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error("EMAIL_USER and EMAIL_PASS must be set in .env for sending emails.");
+  }
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
+    },
+  });
+}
 
 /**
  * Send verification / reset email
@@ -18,6 +29,7 @@ const transporter = nodemailer.createTransport({
  * @param {"verify" | "reset"} type
  */
 export const sendVerificationEmail = async (to, code, type = "verify") => {
+  const transporter = getTransporter();
   try {
     const subject =
       type === "verify"
@@ -38,7 +50,8 @@ export const sendVerificationEmail = async (to, code, type = "verify") => {
 
     console.log(`Email sent to ${to} [${type}]`);
   } catch (error) {
-    console.error("Error sending email:", error.message);
+    console.error("Mail error:", error.message);
+    if (error.code) console.error("Mail error code:", error.code);
     throw new Error("Email could not be sent");
   }
 };
